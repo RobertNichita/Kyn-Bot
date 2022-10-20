@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "author": "Kirynn",
+  "engines": {
+    "node": "16.16.0"
+  },
   "scripts": {
+    "start": "node dist/index.ts",
+    "postinstall": "npm run build",
     "build": "tsc src/index.ts",
     "dev": "ts-node src/index.ts",
     "lint": "eslint . --ext .ts",
