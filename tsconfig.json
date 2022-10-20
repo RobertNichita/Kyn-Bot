@@ -10,6 +10,7 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": false,
         "importHelpers": true,
+        "skipLibCheck": true,
 
         // Module Resolution
         "baseUrl": "./",

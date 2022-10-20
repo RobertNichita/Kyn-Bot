@@ -43,7 +43,6 @@ export class Holidays {
 
         const path = (!gotDay && !gotMonth) ? 'today' : `date/${month}/${day}`;
         const data = await this.getResult(path);
-        console.debug(data);
         const msg = `**Holidays for ${data.day}/${data.month}**\n${data.holidays.map(s => `• ${s}`).join('\n')}`;
         await interaction.followUp(msg);
     }
