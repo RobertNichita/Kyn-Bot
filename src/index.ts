@@ -1,7 +1,7 @@
+
 import { dirname, importx } from '@discordx/importer';
 import { Events, IntentsBitField, Interaction, Message } from 'discord.js';
 import { Client } from 'discordx';
-
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -32,6 +32,13 @@ async function main() {
     });
     
     bot.on(Events.InteractionCreate, (interaction: Interaction) => {
+
+        if (interaction.isButton() || interaction.isSelectMenu()) {
+            if (interaction.customId.startsWith("discordx@pagination@")) {
+              return;
+            }
+          }
+
         bot.executeInteraction(interaction);
     });
     
