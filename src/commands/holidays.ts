@@ -37,21 +37,87 @@ export class Holidays {
         await interaction.deferReply();
 
         if (gotDay && !gotMonth || !gotDay && gotMonth) {
-            await interaction.followUp({ content: 'Both year and month must be provided' });
+            await interaction.followUp({ content: 'Both day and month must be provided' });
+            return;
+        }
+
+        const name = this.getDateName(day, month);
+
+        if (name === undefined) {
+            await interaction.followUp({ content: `${month}/${day} is not a valid date` })
             return;
         }
 
         const path = (!gotDay && !gotMonth) ? 'today' : `date/${month}/${day}`;
         const data = await this.getResult(path);
-        const msg = `**Holidays for ${data.day}/${data.month}**\n${data.holidays.map(s => `• ${s}`).join('\n')}`;
+
+        if (!data || !data.holidays) {
+            await interaction.followUp({ content: `No holidays found for ${name}` });
+            return;
+        }
+
+        const msg = `**Holidays for ${name}**\n${data.holidays.map(s => `• ${s}`).join('\n')}`;
         await interaction.followUp(msg);
     }
 
-    private async getResult(path: string): Promise<APIResponse> {
+    private getDateName(month: number | undefined, day: number | undefined): string | undefined {
+        // Get current date
+        if (month === undefined || day === undefined) {
+            const today = new Date();
+            
+            month = today.getMonth() + 1;
+            day = today.getDate();
+        }
 
-        const res = await fetch(`https://national-api-day.herokuapp.com/api/${path}`);
-        const data = await res.json() as APIResponse;
+        if (month < 1 || month > 12 || day < 1)
+            return undefined;
+        
+        // Validate day is in month
+        switch (month) {
+            case 4:
+            case 6:
+            case 9:
+            case 11:
+                if (day > 30)
+                    return undefined;
+                break;
+            case 2:
+                if (day > 29)
+                    return undefined;
+                break;
+            default:
+                if (day > 31)
+                    return undefined;
+                break;
+        }
 
-        return data;
+        // Get name of date
+        const monthName = new Date(2000, month - 1, 10).toLocaleString('default', { month: 'long' });
+        let dayEnding;
+
+        switch (day % 10) {
+            case 1:
+                dayEnding = "st";
+                break;
+            case 2:
+                dayEnding = "nd";
+                break;
+            case 3:
+                dayEnding = "rd";
+                break;
+            default:
+                dayEnding = "th";
+                break;
+        }
+        
+        return `${monthName} ${day}${dayEnding}`;
+    }
+
+    private async getResult(path: string): Promise<APIResponse | undefined> {
+        try {
+            return await fetch(`https://national-api-day.herokuapp.com/api/${path}`).then(res => res.json()) as APIResponse;
+        } catch (e) {
+            return undefined;
+        }
     }
 }
