@@ -44,16 +44,51 @@ async function main() {
         bot.executeInteraction(interaction);
     });
     
+    /*
+    * rewrites all twitter URLS in a message to fxtwitter URLs
+    * 
+    * @param MessageContent: string
+    * 
+    * @returns the message with all twitter URLs rewritten to fxtwitter URLs
+    * 
+    * e.g.
+    * "The first twitter link is https://twitter.com/LeagueOfLegends/status/1614028829823209472?s=20 
+    *  and the second one is https://twitter.com/Legs/status/1614028829823209472 
+    *  lorem https://twitter.com/Legoland/status/1614028829823209472 ipsum"
+    *  =>
+    *  "The first twitter link is https://fxtwitter.com/LeagueOfLegends/status/1614028829823209472?s=20 
+    *  and the second one is https://fxtwitter.com/Legs/status/1614028829823209472 
+    *  lorem https://fxtwitter.com/Legoland/status/1614028829823209472 ipsum"
+    */
+    const rewriteTwitterUrls = (MessageContent: string) => {
+        //find all twitter URLs
+        const matches = [...MessageContent.matchAll(twitterRegex)];
+        // this reducer will not append the part of the message past the last twitter URL
+        const partial = matches.reduce((accumulator, curMatch, matchIndex) => {
+                return accumulator + 
+                /*subtract 2 from the accumulator length for each match 
+                * since we are adding 2 characters 'fx' for each match
+                * to match the correct position in the original message */
+                MessageContent.substring(accumulator.length - 2*(matchIndex), curMatch.index) + 
+                `https://fxtwitter.com/${curMatch[1]}`;
+        },"");
+        //append the rest of the message
+        return partial + MessageContent.substring(partial.length - matches.length * 2,MessageContent.length);
+    };
+
     bot.on(Events.MessageCreate, (message : Message) => {
+        bot.executeCommand(message);
+        //only rewrite messages after in case it would affect commands
         const originalContent = message.content;
-        const query = message.content.match(twitterRegex);
-        if(query){
-            message.edit(`https://fxtwitter.com/${query[1]}`)
-            .then(msg => console.log(`Rewrote twitter link ${originalContent} to fxtwitter link ${msg.content}`))
+        const hasTwitterUrl = twitterRegex.test(originalContent);
+        if(hasTwitterUrl){
+            message.edit(rewriteTwitterUrls(message.content))
+            .then(msg => console.log(`Rewrote message with twitter link ${originalContent} to message with fxtwitter link ${msg.content}`))
             .catch(console.error);
         }
-        bot.executeCommand(message);
     });
+
+
 
     await importx(`${dirname(import.meta.url)}/{events,commands}/**/*.{ts,js}`);
 
