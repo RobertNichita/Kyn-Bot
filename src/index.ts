@@ -48,7 +48,7 @@ async function main() {
         const originalContent = message.content;
         const query = message.content.match(twitterRegex);
         if(query){
-            message.edit(`https://www.fxtwitter.com/${query[1]}`)
+            message.edit(`https://fxtwitter.com/${query[1]}`)
             .then(msg => console.log(`Rewrote twitter link ${originalContent} to fxtwitter link ${msg.content}`))
             .catch(console.error);
         }
