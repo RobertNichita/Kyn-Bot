@@ -5,6 +5,8 @@ import { Client } from 'discordx';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+const twitterRegex = /https:\/\/twitter\.com\/([-a-zA-Z0-9()@:%_+.~#?&//=]{1,512})/;
+
 const env = process.env.NODE_ENV || 'dev';
 
 async function main() {
@@ -43,6 +45,13 @@ async function main() {
     });
     
     bot.on(Events.MessageCreate, (message : Message) => {
+        const originalContent = message.content;
+        const query = message.content.match(twitterRegex);
+        if(query){
+            message.edit(`https://www.fxtwitter.com/${query[1]}`)
+            .then(msg => console.log(`Rewrote twitter link ${originalContent} to fxtwitter link ${msg.content}`))
+            .catch(console.error);
+        }
         bot.executeCommand(message);
     });
 
