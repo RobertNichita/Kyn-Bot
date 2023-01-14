@@ -53,12 +53,12 @@ async function main() {
     * 
     * e.g.
     * "The first twitter link is https://twitter.com/LeagueOfLegends/status/1614028829823209472?s=20 
-    *  and the second one is https://twitter.com/Legs/status/1614028829823209472 
-    *  lorem https://twitter.com/Legoland/status/1614028829823209472 ipsum"
+    *  and the second one is https://twitter.com/Legoland/status/1614 
+    *  lorem https://twitter.com/ ipsum"
     *  =>
     *  "The first twitter link is https://fxtwitter.com/LeagueOfLegends/status/1614028829823209472?s=20 
-    *  and the second one is https://fxtwitter.com/Legs/status/1614028829823209472 
-    *  lorem https://fxtwitter.com/Legoland/status/1614028829823209472 ipsum"
+    *  and the second one is https://fxtwitter.com/Legoland/status/1614028829823209472 
+    *  lorem https://fxtwitter.com/ ipsum"
     */
     const rewriteTwitterUrls = (MessageContent: string) => {
         //find all twitter URLs
