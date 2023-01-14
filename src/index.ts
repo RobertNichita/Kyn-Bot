@@ -1,11 +1,11 @@
 
 import { dirname, importx } from '@discordx/importer';
-import { Events, IntentsBitField, Interaction, Message } from 'discord.js';
+import { Events, IntentsBitField, Interaction, Message, Channel } from 'discord.js';
 import { Client } from 'discordx';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-const twitterRegex = /https:\/\/twitter\.com\/([-a-zA-Z0-9()@:%_+.~#?&//=]{1,512})/;
+const twitterRegex = /https:\/\/twitter\.com\/([-a-zA-Z0-9()@:%_+.~#?&//=]{0,512})/g;
 
 const env = process.env.NODE_ENV || 'dev';
 
@@ -18,6 +18,7 @@ async function main() {
             IntentsBitField.Flags.GuildMessages,
             IntentsBitField.Flags.GuildMessageReactions,
             IntentsBitField.Flags.GuildVoiceStates,
+            IntentsBitField.Flags.MessageContent
         ],
         silent: false
     });
@@ -62,9 +63,11 @@ async function main() {
     */
     const rewriteTwitterUrls = (MessageContent: string) => {
         //find all twitter URLs
-        const matches = [...MessageContent.matchAll(twitterRegex)];
+        const matches = MessageContent.matchAll(twitterRegex);
+        const arrmatches = Array.from(matches);
+        console.log(JSON.stringify(matches));
         // this reducer will not append the part of the message past the last twitter URL
-        const partial = matches.reduce((accumulator, curMatch, matchIndex) => {
+        const partial = arrmatches.reduce((accumulator, curMatch, matchIndex) => {
                 return accumulator + 
                 /*subtract 2 from the accumulator length for each match 
                 * since we are adding 2 characters 'fx' for each match
@@ -73,18 +76,30 @@ async function main() {
                 `https://fxtwitter.com/${curMatch[1]}`;
         },"");
         //append the rest of the message
-        return partial + MessageContent.substring(partial.length - matches.length * 2,MessageContent.length);
+        return partial + MessageContent.substring(partial.length - arrmatches.length * 2,MessageContent.length);
     };
 
-    bot.on(Events.MessageCreate, (message : Message) => {
+    bot.on(Events.MessageCreate, (message : Message) => {     
+        // ignore messages from bots
+        if(message.author.bot) return;   
         bot.executeCommand(message);
         //only rewrite messages after in case it would affect commands
         const originalContent = message.content;
         const hasTwitterUrl = twitterRegex.test(originalContent);
+        console.log(`Message: ${message.content} ${(hasTwitterUrl?"has a twitter url":"has no twitter url")}`);
         if(hasTwitterUrl){
-            message.edit(rewriteTwitterUrls(message.content))
-            .then(msg => console.log(`Rewrote message with twitter link ${originalContent} to message with fxtwitter link ${msg.content}`))
-            .catch(console.error);
+            const channel:Channel|undefined = bot.channels.cache.get(message.channelId);
+            if(channel && (channel?.isTextBased() || channel?.isThread())){
+                channel.send({content: `Posted by user <@${message.author.id}>\n` + rewriteTwitterUrls(originalContent)})
+                .then((msg:Message) => {console.log(`Rewrote message with twitter link ${originalContent} to message with fxtwitter link ${msg.content}`);})
+                .catch(console.error);
+            }
+        }
+        if(message.deletable){
+            message.delete();
+            console.log(`deleted message ${originalContent} from user ${message.author.username}`);
+        }else{
+            console.log(`could not delete message ${originalContent} from user ${message.author.username}`);
         }
     });
 
