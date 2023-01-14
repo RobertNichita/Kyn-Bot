@@ -57,7 +57,7 @@ async function main() {
     *  lorem https://twitter.com/ ipsum"
     *  =>
     *  "The first twitter link is https://fxtwitter.com/LeagueOfLegends/status/1614028829823209472?s=20 
-    *  and the second one is https://fxtwitter.com/Legoland/status/1614028829823209472 
+    *  and the second one is https://fxtwitter.com/Legoland/status/1614
     *  lorem https://fxtwitter.com/ ipsum"
     */
     const rewriteTwitterUrls = (MessageContent: string) => {
