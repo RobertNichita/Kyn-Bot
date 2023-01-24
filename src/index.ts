@@ -1,13 +1,13 @@
 
 import { dirname, importx } from '@discordx/importer';
-import { Events, IntentsBitField, Interaction, Message, Channel } from 'discord.js';
+import { Events, IntentsBitField, Interaction, Message } from 'discord.js';
 import { Client } from 'discordx';
 import * as dotenv from 'dotenv';
+import fxtwitterRewrite from './events/fxtwitter.js';
 dotenv.config();
 
-const twitterRegex = /https:\/\/twitter\.com/;
 
-const env = process.env.NODE_ENV || 'dev';
+// const env = process.env.NODE_ENV || 'dev';
 
 async function main() {
     
@@ -27,9 +27,9 @@ async function main() {
     
         await bot.guilds.fetch();
 
-        if (env === 'dev') await bot.clearApplicationCommands();
+        // if (env === 'dev') await bot.clearApplicationCommands();
 
-        await bot.initApplicationCommands();
+        // await bot.initApplicationCommands();
     
         console.log('Kyn-Bot Ready!');
     });
@@ -51,24 +51,7 @@ async function main() {
 
         bot.executeCommand(message);
 
-        //only rewrite messages after in case it would affect commands
-        const originalContent = message.content;
-        const hasTwitterUrl = twitterRegex.test(originalContent);
-        if(hasTwitterUrl){
-            const channel:Channel|undefined = bot.channels.cache.get(message.channelId);
-            if(channel && (channel?.isTextBased() || channel?.isThread())){
-                channel.send({content: `Posted by user <@${message.author.id}>\n` + originalContent.split('https://twitter.com').join("https://fxtwitter.com")})
-                .then((msg:Message) => {
-                    if(message.deletable){
-                        message.delete();
-                        console.log(`deleted message ${originalContent} from user ${message.author.username}`);
-                    }else{
-                        console.log(`could not delete message ${originalContent} from user ${message.author.username}`);
-                    }
-                    console.log(`Rewrote message with twitter link ${originalContent} to message with fxtwitter link ${msg.content}`);})
-                .catch(console.error);
-            }
-        }
+        fxtwitterRewrite(message, bot);
 
     });
 
